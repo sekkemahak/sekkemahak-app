@@ -33,6 +33,10 @@ jobs:
           cp -r temp_backup/lib .
           flutter pub get
 
+      - name: Fix InAppWebView API (Options -> Settings)
+        run: |
+          sed -i 's/InAppWebViewOptions(/InAppWebViewSettings(/g' $(find lib -name "*.dart") || true
+
       - name: Fix Gradle and Proguard compatibility
         run: |
           echo "android.suppressUnsupportedCompileSdk=34" >> android/gradle.properties
