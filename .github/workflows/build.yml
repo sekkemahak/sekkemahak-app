@@ -2,6 +2,7 @@ name: Build Flutter APK
 
 on:
   push:
+    branches: [ main ]
   workflow_dispatch:
 
 jobs:
@@ -20,7 +21,6 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          
           channel: 'stable'
 
       - name: Recreate Android Project
@@ -28,10 +28,17 @@ jobs:
           mkdir -p temp_backup
           cp pubspec.yaml temp_backup/
           cp -r lib temp_backup/
-          flutter create . --org ir.sekkemahak --project-name sekkemahak_app --platforms=android --overwrite
+          flutter create . --org ir.sekkemahak --platforms android
           cp temp_backup/pubspec.yaml .
           cp -r temp_backup/lib .
           flutter pub get
+
+      - name: Fix Gradle and Proguard compatibility
+        run: |
+          echo "android.suppressUnsupportedCompileSdk=34" >> android/gradle.properties
+          echo "android.useAndroidX=true" >> android/gradle.properties
+          echo "android.enableJetifier=true" >> android/gradle.properties
+          sed -i 's/getDefaultProguardFile('\''proguard-android.txt'\'')/getDefaultProguardFile('\''proguard-android-optimize.txt'\'')/g' $(find ~/.pub-cache -name "build.gradle" 2>/dev/null) || true
 
       - name: Set Android Min SDK
         run: |
@@ -39,10 +46,10 @@ jobs:
           sed -i 's/minSdkVersion flutter.minSdkVersion/minSdkVersion 21/g' android/app/build.gradle || true
 
       - name: Build APK
-        run: flutter build apk --release
+        run: flutter build apk --release --no-tree-shake-icons
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: sekkemahak-apk
+          name: app-release
           path: build/app/outputs/flutter-apk/app-release.apk
