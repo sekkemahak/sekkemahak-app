@@ -26,11 +26,14 @@ jobs:
       - name: Recreate Android project
         run: flutter create . --platforms=android
 
-      - name: Update Android build configuration
+      - name: Fix Android Build & Proguard
         run: |
+          mkdir -p android/app
+          touch android/app/proguard-rules.pro
+          find android -name "build.gradle*" -exec sed -i "s/getDefaultProguardFile('proguard-android.txt')/file('proguard-rules.pro')/g" {} +
+          find android -name "build.gradle*" -exec sed -i "s/getDefaultProguardFile('proguard-android-optimize.txt')/file('proguard-rules.pro')/g" {} +
           find android -name "build.gradle*" -exec sed -i 's/minSdkVersion .*/minSdkVersion 21/g' {} +
           find android -name "build.gradle*" -exec sed -i 's/minSdk = .*/minSdk = 21/g' {} +
-          find android -name "build.gradle*" -exec sed -i 's/proguard-android.txt/proguard-android-optimize.txt/g' {} +
 
       - name: Fix InAppWebView API usage
         run: |
