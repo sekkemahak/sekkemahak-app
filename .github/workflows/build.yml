@@ -23,34 +23,24 @@ jobs:
         with:
           channel: 'stable'
 
-      - name: Recreate Android Project
-        run: |
-          mkdir -p temp_backup
-          cp pubspec.yaml temp_backup/
-          cp -r lib temp_backup/
-          flutter create . --org ir.sekkemahak --platforms android
-          cp temp_backup/pubspec.yaml .
-          cp -r temp_backup/lib .
-          flutter pub get
+      - name: Recreate Android project
+        run: flutter create . --platforms=android
 
-      - name: Fix InAppWebView API (Options -> Settings)
+      - name: Update Android build configuration
         run: |
-          sed -i 's/InAppWebViewOptions(/InAppWebViewSettings(/g' $(find lib -name "*.dart") || true
+          sed -i 's/minSdkVersion .*/minSdkVersion 21/g' android/app/build.gradle
+          sed -i 's/proguard-android.txt/proguard-android-optimize.txt/g' android/app/build.gradle
 
-      - name: Fix Gradle and Proguard compatibility
+      - name: Fix InAppWebView API usage
         run: |
-          echo "android.suppressUnsupportedCompileSdk=34" >> android/gradle.properties
-          echo "android.useAndroidX=true" >> android/gradle.properties
-          echo "android.enableJetifier=true" >> android/gradle.properties
-          sed -i 's/getDefaultProguardFile('\''proguard-android.txt'\'')/getDefaultProguardFile('\''proguard-android-optimize.txt'\'')/g' $(find ~/.pub-cache -name "build.gradle" 2>/dev/null) || true
+          find lib -name "*.dart" -exec sed -i 's/InAppWebViewOptions/InAppWebViewSettings/g' {} +
+          find lib -name "*.dart" -exec sed -i 's/crossPlatform:[[:space:]]*InAppWebViewSettings(/InAppWebViewSettings(/g' {} +
 
-      - name: Set Android Min SDK
-        run: |
-          sed -i 's/minSdkVersion = flutter.minSdkVersion/minSdkVersion = 21/g' android/app/build.gradle || true
-          sed -i 's/minSdkVersion flutter.minSdkVersion/minSdkVersion 21/g' android/app/build.gradle || true
+      - name: Install dependencies
+        run: flutter pub get
 
       - name: Build APK
-        run: flutter build apk --release --no-tree-shake-icons
+        run: flutter build apk --release
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
