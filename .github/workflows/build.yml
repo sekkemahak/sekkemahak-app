@@ -25,6 +25,8 @@ jobs:
           channel: 'stable'
 
       - name: Recreate Android project
+        run: flutter create . --platforms=android --project-name sekkemahak_app
+
         run: flutter create . --platforms=android
 
       - name: Accept Android SDK Licenses
