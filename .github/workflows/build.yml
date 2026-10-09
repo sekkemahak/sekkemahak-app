@@ -23,10 +23,20 @@ jobs:
           flutter-version: '3.19.6'
           channel: 'stable'
 
-      - name: Create Flutter project files
+      - name: Recreate Android Project
         run: |
-          flutter create . --org ir.sekkemahak --project-name sekkemahak_app
+          mkdir -p temp_backup
+          cp pubspec.yaml temp_backup/
+          cp -r lib temp_backup/
+          flutter create . --org ir.sekkemahak --project-name sekkemahak_app --platforms=android --overwrite
+          cp temp_backup/pubspec.yaml .
+          cp -r temp_backup/lib .
           flutter pub get
+
+      - name: Set Android Min SDK
+        run: |
+          sed -i 's/minSdkVersion = flutter.minSdkVersion/minSdkVersion = 21/g' android/app/build.gradle || true
+          sed -i 's/minSdkVersion flutter.minSdkVersion/minSdkVersion 21/g' android/app/build.gradle || true
 
       - name: Build APK
         run: flutter build apk --release
