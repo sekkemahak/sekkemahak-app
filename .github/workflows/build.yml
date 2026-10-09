@@ -28,8 +28,9 @@ jobs:
 
       - name: Update Android build configuration
         run: |
-          sed -i 's/minSdkVersion .*/minSdkVersion 21/g' android/app/build.gradle
-          sed -i 's/proguard-android.txt/proguard-android-optimize.txt/g' android/app/build.gradle
+          find android -name "build.gradle*" -exec sed -i 's/minSdkVersion .*/minSdkVersion 21/g' {} +
+          find android -name "build.gradle*" -exec sed -i 's/minSdk = .*/minSdk = 21/g' {} +
+          find android -name "build.gradle*" -exec sed -i 's/proguard-android.txt/proguard-android-optimize.txt/g' {} +
 
       - name: Fix InAppWebView API usage
         run: |
